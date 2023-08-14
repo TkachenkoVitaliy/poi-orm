@@ -2,12 +2,15 @@ package com.poiorm.annotation;
 
 import java.lang.annotation.*;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 
 /**
  * Mark field as Excel cell
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Retention(RUNTIME)
+@Target({FIELD})
 @Documented
 public @interface ExcelCell {
     /**
