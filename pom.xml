@@ -6,7 +6,7 @@
 
     <groupId>io.github.TkachenkoVitaliy</groupId>
     <artifactId>poi-orm</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.1</version>
     <name>poi-orm</name>
     <description>poi-orm allows you to map excel rows to Java objects by means of Apache POI</description>
     <url>http://github.com/TkachenkoVitaliy/poi-orm</url>
