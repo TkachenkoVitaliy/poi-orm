@@ -1,5 +1,6 @@
 package com.poiorm.util;
 
+import com.poiorm.exception.PoiOrmInstantiationException;
 import com.poiorm.exception.MappingException;
 
 import java.lang.reflect.Constructor;
@@ -19,8 +20,8 @@ public final class ReflectUtil {
                 constructor.setAccessible(true);
             }
             instance = constructor.newInstance();
-        } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
-            throw new MappingException(String.format("Cannot create a new instance of %s", type.getName()), e);
+        } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException | InstantiationException e) {
+            throw new PoiOrmInstantiationException(String.format("Cannot create a new instance of %s", type.getName()), e);
         }
         return instance;
     }
