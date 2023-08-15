@@ -27,10 +27,14 @@ public class RowListIterator {
         return sheet.getRow(index + 1);
     }
 
+    public boolean hasPrevious() {
+        return index - 1 >= minIndex;
+    }
+
     public RowListIterator(Sheet sheet) {
         this.sheet = sheet;
         this.minIndex = sheet.getFirstRowNum();
-        this.maxIndex = 127; //sheet.getLastRowNum();
+        this.maxIndex = 127; // TODO sheet.getLastRowNum();
         this.index = minIndex;
     }
 }

@@ -1,17 +1,16 @@
 package com.poiorm;
 
-import java.lang.reflect.Field;
+import com.poiorm.mapper.ExcelOrm;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 public class Main {
-    public static void main(String[] args) throws NoSuchFieldException {
-        Person person = new Person();
-        Class<? extends Person> type = person.getClass();
-        Field field = type.getDeclaredField("name");
-        System.out.println(field.getType() == String.class);
-
-        Field secondField = type.getDeclaredField("age");
-        System.out.println(secondField.getType() == double.class);
-
+    public static void main(String[] args) throws NoSuchFieldException, IOException {
+        Workbook workbook = WorkbookFactory.create(new File("/test.xlsx"));
+        ExcelOrm.fromExcel(workbook.getSheetAt(0), Person.class);
     }
 
 

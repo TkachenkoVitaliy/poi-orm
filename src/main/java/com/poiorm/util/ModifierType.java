@@ -13,7 +13,7 @@ public enum ModifierType {
     INTERFACE(512),
     ABSTRACT(1024);
 
-    private int value;
+    private final int value;
     ModifierType(int value) {
         this.value = value;
     }

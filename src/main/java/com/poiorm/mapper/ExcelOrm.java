@@ -17,18 +17,18 @@ public class ExcelOrm {
     public static <T> List<T> fromExcel(final Sheet sheet, Class<T> rootType) {
         List<T> result = new ArrayList<>();
         Consumer<T> rootConsumer = result::add;
-        MappingModel<T> rootMappingModel = new MappingModel<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
+        MappingContext<T> rootMappingContext = new MappingContext<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
 
 //        ListIterator<Row> iterator = (ListIterator<Row>) sheet.iterator();
         RowListIterator iterator = new RowListIterator(sheet);
-        MappingModel currentMappingModel = rootMappingModel;
+        MappingContext currentMappingContext = rootMappingContext;
 
         while (iterator.hasNext()) {
             try {
-                currentMappingModel = recursiveFromExcel(currentMappingModel, iterator);
-                if (currentMappingModel.getConsumer() == null) {
-                    currentMappingModel = new MappingModel<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
-                    recursiveFromExcel(currentMappingModel, iterator);
+                currentMappingContext = recursiveFromExcel(currentMappingContext, iterator);
+                if (currentMappingContext.consumer() == null) {
+                    currentMappingContext = new MappingContext<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
+                    recursiveFromExcel(currentMappingContext, iterator);
                 }
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
@@ -38,9 +38,9 @@ public class ExcelOrm {
         return result;
     }
 
-    private static MappingModel recursiveFromExcel(MappingModel mappingModel, RowListIterator iterator) throws IllegalAccessException {
-        if (mappingModel.getConsumer() == null) {
-            return new MappingModel<>(null, null, null);
+    private static MappingContext recursiveFromExcel(MappingContext mappingContext, RowListIterator iterator) throws IllegalAccessException {
+        if (mappingContext.consumer() == null) {
+            return new MappingContext<>(null, null, null);
         }
 
         if (iterator.hasNext()) {
@@ -48,13 +48,13 @@ public class ExcelOrm {
 
             int rowNum = row.getRowNum();
 
-            Class type = mappingModel.getType();
+            Class type = mappingContext.type();
             boolean check = ReflectUtil.performIdentifierMethod(
                     type,
                     ExcelUtil.readCellValue(String.class, row.getCell(0))
             );
             if (check) {
-                Object instance = mappingModel.getInstance();
+                Object instance = mappingContext.instance();
 
                 for (Field field : type.getDeclaredFields()) {
                     if (field.isAnnotationPresent(ExcelCell.class)) {
@@ -70,23 +70,9 @@ public class ExcelOrm {
                     }
                 }
 
-//                Arrays.stream(type.getDeclaredFields())
-//                        .filter(field -> field.isAnnotationPresent(ExcelCell.class))
-//                        .forEach(field -> {
-//                            ExcelCell annotation = field.getAnnotation(ExcelCell.class);
-//                            ReflectUtil.setFieldValue(
-//                                    field,
-//                                    ExcelUtil.readCellValue(
-//                                            field.getClass(),
-//                                            row.getCell(annotation.value())
-//                                    ),
-//                                    instance
-//                            );
-//                        });
+                mappingContext.consumer().accept(instance);
 
-                mappingModel.getConsumer().accept(instance);
-
-                return mappingModel;
+                return mappingContext;
             } else {
                 Optional<Field> optionalInnerCollection = Arrays.stream(type.getDeclaredFields())
                         .filter(field -> field.isAnnotationPresent(InnerRowObject.class))
@@ -97,27 +83,27 @@ public class ExcelOrm {
                     ParameterizedType genericType = (ParameterizedType) innerCollection.getGenericType();
                     Class innerClass = (Class) genericType.getActualTypeArguments()[0];
 
-                    List innerClassList = (List) innerCollection.get(mappingModel.getInstance());
+                    List innerClassList = (List) innerCollection.get(mappingContext.instance());
 
                     System.out.println("Create innerInstance - " + innerClass.getName());
                     Object innerInstance = ReflectUtil.newEmptyInstance(innerClass);
 //                    innerClassList.add(innerInstance);
 
-                    MappingModel newMappingModel = new MappingModel<>(
+                    MappingContext newMappingContext = new MappingContext<>(
                             innerClassList::add,
                             innerClass,
                             innerInstance
                     );
 
                     iterator.previous();
-                    return recursiveFromExcel(newMappingModel, iterator);
+                    return recursiveFromExcel(newMappingContext, iterator);
                 } else {
                     Class rootClass = ReflectUtil.getRecursiveParentRoot(type);
                     iterator.previous();
-                    return new MappingModel(null, null, null);
+                    return new MappingContext(null, null, null);
                 }
             }
         }
-        return new MappingModel<>(null, null, null);
+        return new MappingContext<>(null, null, null);
     }
 }
