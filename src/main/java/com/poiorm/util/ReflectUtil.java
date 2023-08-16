@@ -5,7 +5,6 @@ import com.poiorm.annotation.RowObject;
 import com.poiorm.exception.PoiOrmInstantiationException;
 import com.poiorm.exception.PoiOrmMappingException;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -59,7 +58,7 @@ public final class ReflectUtil {
         }
         Method identifierMethod = identifierMethods.get(0);
         int modifiers = identifierMethod.getModifiers();
-        if (!isModifierSet(modifiers, ModifierType.STATIC)) {
+        if (isModifierSet(modifiers, ModifierType.STATIC)) {
             throw new PoiOrmMappingException(
                     String.format("IdentifierMethod should be static - error in class %s", type.getName())
             );

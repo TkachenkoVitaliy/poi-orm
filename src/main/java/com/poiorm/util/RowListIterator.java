@@ -34,7 +34,7 @@ public class RowListIterator {
     public RowListIterator(Sheet sheet) {
         this.sheet = sheet;
         this.minIndex = sheet.getFirstRowNum();
-        this.maxIndex = 127; // TODO sheet.getLastRowNum();
+        this.maxIndex = Math.min(sheet.getLastRowNum(), sheet.getPhysicalNumberOfRows() + sheet.getFirstRowNum()); // TODO sheet.getLastRowNum(); //127
         this.index = minIndex;
     }
 }

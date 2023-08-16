@@ -19,17 +19,22 @@ public class ExcelOrm {
         Consumer<T> rootConsumer = result::add;
         MappingContext<T> rootMappingContext = new MappingContext<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
 
-//        ListIterator<Row> iterator = (ListIterator<Row>) sheet.iterator();
         RowListIterator iterator = new RowListIterator(sheet);
-        MappingContext currentMappingContext = rootMappingContext;
+        MappingContext<T> currentMappingContext = rootMappingContext;
 
         while (iterator.hasNext()) {
             try {
-                currentMappingContext = recursiveFromExcel(currentMappingContext, iterator);
+                if (currentMappingContext == null) {
+                    break;
+                }
+
                 if (currentMappingContext.consumer() == null) {
                     currentMappingContext = new MappingContext<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
                     recursiveFromExcel(currentMappingContext, iterator);
                 }
+
+                currentMappingContext = recursiveFromExcel(currentMappingContext, iterator);
+
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
@@ -46,7 +51,9 @@ public class ExcelOrm {
         if (iterator.hasNext()) {
             Row row = iterator.next();
 
-            int rowNum = row.getRowNum();
+            if (row == null) {
+                return null;
+            }
 
             Class type = mappingContext.type();
             boolean check = ReflectUtil.performIdentifierMethod(
@@ -72,7 +79,19 @@ public class ExcelOrm {
 
                 mappingContext.consumer().accept(instance);
 
-                return mappingContext;
+                Optional<Field> optionalInnerCollection = Arrays.stream(type.getDeclaredFields())
+                        .filter(field -> field.isAnnotationPresent(InnerRowObject.class))
+                        .findFirst();
+
+                if (optionalInnerCollection.isPresent()) {
+                    return mappingContext;
+                } else {
+                    return new MappingContext(
+                            mappingContext.consumer(),
+                            mappingContext.type(),
+                            ReflectUtil.newEmptyInstance(mappingContext.type())
+                    );
+                }
             } else {
                 Optional<Field> optionalInnerCollection = Arrays.stream(type.getDeclaredFields())
                         .filter(field -> field.isAnnotationPresent(InnerRowObject.class))
@@ -87,7 +106,6 @@ public class ExcelOrm {
 
                     System.out.println("Create innerInstance - " + innerClass.getName());
                     Object innerInstance = ReflectUtil.newEmptyInstance(innerClass);
-//                    innerClassList.add(innerInstance);
 
                     MappingContext newMappingContext = new MappingContext<>(
                             innerClassList::add,
@@ -98,7 +116,6 @@ public class ExcelOrm {
                     iterator.previous();
                     return recursiveFromExcel(newMappingContext, iterator);
                 } else {
-                    Class rootClass = ReflectUtil.getRecursiveParentRoot(type);
                     iterator.previous();
                     return new MappingContext(null, null, null);
                 }
