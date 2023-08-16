@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 public class ExcelOrm {
-    public static <T> List<T> fromExcel(final Sheet sheet, Class<T> rootType) {
+    public static <T> List<T> fromExcel(final Sheet sheet, Class<T> rootType) throws IllegalAccessException {
         List<T> result = new ArrayList<>();
         Consumer<T> rootConsumer = result::add;
         MappingContext<T> rootMappingContext = new MappingContext<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
@@ -25,39 +25,24 @@ public class ExcelOrm {
         int currentRowIndex = startRowIndex;
         int cicles = 0;
         int treeDepth = AnnotationUtil.getTreeDepth(rootType);
-        System.out.println("Tree " + treeDepth);
 
         RowListIterator iterator = new RowListIterator(sheet, startRowIndex);
         MappingContext<T> currentMappingContext = rootMappingContext;
 
         while (iterator.hasNext()) {
-            if (currentRowIndex == iterator.getCurrentIndex()) {
-                cicles++;
+            cicles = currentRowIndex == iterator.getCurrentIndex() ? cicles + 1 : 0;
+
+            if (cicles > treeDepth) break;
+            if (currentMappingContext == null) break;
+
+            if (currentMappingContext.consumer() == null) {
+                currentMappingContext = new MappingContext<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
+                recursiveFromExcel(currentMappingContext, iterator);
             } else {
-                cicles = 0;
+                currentRowIndex = iterator.getCurrentIndex();
             }
 
-            if (cicles > treeDepth) {
-                break;
-            }
-
-            try {
-                if (currentMappingContext == null) {
-                    break;
-                }
-
-                if (currentMappingContext.consumer() == null) {
-                    currentMappingContext = new MappingContext<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
-                    recursiveFromExcel(currentMappingContext, iterator);
-                } else {
-                    currentRowIndex = iterator.getCurrentIndex();
-                }
-
-                currentMappingContext = recursiveFromExcel(currentMappingContext, iterator);
-
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
+            currentMappingContext = recursiveFromExcel(currentMappingContext, iterator);
         }
 
         return result;
@@ -118,6 +103,7 @@ public class ExcelOrm {
                     Field innerCollection = optionalInnerCollection.get();
                     Class innerClass = ReflectUtil.getListGenericType(innerCollection);
 
+                    // TODO скрыть от глаз ВАЖНО!!!
                     List children = (List) innerCollection.get(mappingContext.instance());
 
                     Object innerInstance = ReflectUtil.newEmptyInstance(innerClass);

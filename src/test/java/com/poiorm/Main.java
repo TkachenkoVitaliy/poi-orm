@@ -8,7 +8,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, IllegalAccessException {
         Workbook workbook = WorkbookFactory.create(new File("/test.xlsx"));
         ExcelOrm.fromExcel(workbook.getSheetAt(0), Person.class);
     }
