@@ -5,8 +5,6 @@ import org.apache.poi.ss.usermodel.CellType;
 
 public class ExcelUtil {
     public static Object readCellValue(Class<?> fieldType, Cell cell) {
-        System.out.printf("Row - [%s], column - [%s]%n",cell.getRowIndex(), cell.getColumnIndex());
-
         if (fieldType == String.class) {
             if (cell.getCellType() == CellType.NUMERIC) {
                 double numericCellValue = cell.getNumericCellValue();

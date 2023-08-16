@@ -46,7 +46,7 @@ public class ExcelOrm {
 
     private static MappingContext recursiveFromExcel(MappingContext mappingContext, RowListIterator iterator) throws IllegalAccessException {
         if (mappingContext.consumer() == null) {
-            return new MappingContext<>(null, null, null);
+            return mappingContext;
         }
 
         if (iterator.hasNext()) {
@@ -61,8 +61,10 @@ public class ExcelOrm {
                     type,
                     ExcelUtil.readCellValue(String.class, row.getCell(0))
             );
+
             if (check) {
                 Object instance = mappingContext.instance();
+                Consumer consumer = mappingContext.consumer();
 
                 for (Field field : type.getDeclaredFields()) {
                     if (field.isAnnotationPresent(ExcelCell.class)) {
@@ -78,7 +80,7 @@ public class ExcelOrm {
                     }
                 }
 
-                mappingContext.consumer().accept(instance);
+                consumer.accept(instance);
 
                 Optional<Field> optionalInnerCollection = AnnotationUtil.getInnerCollectionField(type);
 
@@ -86,23 +88,20 @@ public class ExcelOrm {
                     return mappingContext;
                 } else {
                     return new MappingContext(
-                            mappingContext.consumer(),
-                            mappingContext.type(),
-                            ReflectUtil.newEmptyInstance(mappingContext.type())
+                            consumer,
+                            type,
+                            ReflectUtil.newEmptyInstance(type)
                     );
                 }
             } else {
                 Optional<Field> optionalInnerCollection = AnnotationUtil.getInnerCollectionField(type);
 
                 if (optionalInnerCollection.isPresent()) {
-                    // TODO получение generic из List
                     Field innerCollection = optionalInnerCollection.get();
                     Class innerClass = ReflectUtil.getListGenericType(innerCollection);
-                    // TODO получение generic Class из List
 
                     List children = (List) innerCollection.get(mappingContext.instance());
 
-                    System.out.println("Create innerInstance - " + innerClass.getName());
                     Object innerInstance = ReflectUtil.newEmptyInstance(innerClass);
 
                     MappingContext newMappingContext = new MappingContext<>(
