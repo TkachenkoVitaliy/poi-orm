@@ -2,6 +2,7 @@ package com.poiorm.mapper;
 
 import com.poiorm.annotation.ExcelCell;
 import com.poiorm.annotation.InnerRowObject;
+import com.poiorm.util.AnnotationUtil;
 import com.poiorm.util.ExcelUtil;
 import com.poiorm.util.ReflectUtil;
 import com.poiorm.util.RowListIterator;
@@ -56,7 +57,7 @@ public class ExcelOrm {
             }
 
             Class type = mappingContext.type();
-            boolean check = ReflectUtil.performIdentifierMethod(
+            boolean check = AnnotationUtil.performIdentifierMethod(
                     type,
                     ExcelUtil.readCellValue(String.class, row.getCell(0))
             );
