@@ -2,6 +2,7 @@ package com.poiorm.mapper;
 
 import com.poiorm.annotation.ExcelCell;
 import com.poiorm.annotation.InnerRowObject;
+import com.poiorm.annotation.RowObject;
 import com.poiorm.util.AnnotationUtil;
 import com.poiorm.util.ExcelUtil;
 import com.poiorm.util.ReflectUtil;
@@ -19,11 +20,27 @@ public class ExcelOrm {
         List<T> result = new ArrayList<>();
         Consumer<T> rootConsumer = result::add;
         MappingContext<T> rootMappingContext = new MappingContext<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
+        RowObject rowObjectAnnotation = rootType.getAnnotation(RowObject.class);
+        int startRowIndex = rowObjectAnnotation.startRowIndex();
+        int currentRowIndex = startRowIndex;
+        int cicles = 0;
+        int treeDepth = AnnotationUtil.getTreeDepth(rootType);
+        System.out.println("Tree " + treeDepth);
 
-        RowListIterator iterator = new RowListIterator(sheet);
+        RowListIterator iterator = new RowListIterator(sheet, startRowIndex);
         MappingContext<T> currentMappingContext = rootMappingContext;
 
         while (iterator.hasNext()) {
+            if (currentRowIndex == iterator.getCurrentIndex()) {
+                cicles++;
+            } else {
+                cicles = 0;
+            }
+
+            if (cicles > treeDepth) {
+                break;
+            }
+
             try {
                 if (currentMappingContext == null) {
                     break;
@@ -32,6 +49,8 @@ public class ExcelOrm {
                 if (currentMappingContext.consumer() == null) {
                     currentMappingContext = new MappingContext<>(rootConsumer, rootType, ReflectUtil.newEmptyInstance(rootType));
                     recursiveFromExcel(currentMappingContext, iterator);
+                } else {
+                    currentRowIndex = iterator.getCurrentIndex();
                 }
 
                 currentMappingContext = recursiveFromExcel(currentMappingContext, iterator);
@@ -57,10 +76,9 @@ public class ExcelOrm {
             }
 
             Class type = mappingContext.type();
-            boolean check = AnnotationUtil.performIdentifierMethod(
-                    type,
-                    ExcelUtil.readCellValue(String.class, row.getCell(0))
-            );
+            int identifierColumnIndex = AnnotationUtil.getIdentifierFieldColumnIndex(type);
+
+            boolean check = identifierColumnIndex < 0 || AnnotationUtil.performIdentifierMethod(type, row);
 
             if (check) {
                 Object instance = mappingContext.instance();

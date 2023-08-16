@@ -15,4 +15,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface RowObject {
     Class parent() default void.class;
+    int startRowIndex() default 0;
 }
