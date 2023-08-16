@@ -61,13 +61,18 @@ public class ExcelOrm {
             }
 
             Class type = mappingContext.type();
+            Object instance = mappingContext.instance();
+            Consumer consumer = mappingContext.consumer();
+
+            // TODO возможно этот кусок кода перенести в performIdentifierMethod
             int identifierColumnIndex = AnnotationUtil.getIdentifierFieldColumnIndex(type);
 
             boolean check = identifierColumnIndex < 0 || AnnotationUtil.performIdentifierMethod(type, row);
+            // TODO на возможно лучше оставить т.к. тогда скроем логику работы что он вернет true если IdentifierField нету
+            // TODO возможно просто переименовать и перенести в него
 
             if (check) {
-                Object instance = mappingContext.instance();
-                Consumer consumer = mappingContext.consumer();
+
 
                 for (Field field : type.getDeclaredFields()) {
                     if (field.isAnnotationPresent(ExcelCell.class)) {
