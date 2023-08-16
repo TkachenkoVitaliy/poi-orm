@@ -80,9 +80,7 @@ public class ExcelOrm {
 
                 mappingContext.consumer().accept(instance);
 
-                Optional<Field> optionalInnerCollection = Arrays.stream(type.getDeclaredFields())
-                        .filter(field -> field.isAnnotationPresent(InnerRowObject.class))
-                        .findFirst();
+                Optional<Field> optionalInnerCollection = AnnotationUtil.getInnerCollectionField(type);
 
                 if (optionalInnerCollection.isPresent()) {
                     return mappingContext;
@@ -94,22 +92,21 @@ public class ExcelOrm {
                     );
                 }
             } else {
-                Optional<Field> optionalInnerCollection = Arrays.stream(type.getDeclaredFields())
-                        .filter(field -> field.isAnnotationPresent(InnerRowObject.class))
-                        .findFirst();
+                Optional<Field> optionalInnerCollection = AnnotationUtil.getInnerCollectionField(type);
 
                 if (optionalInnerCollection.isPresent()) {
+                    // TODO получение generic из List
                     Field innerCollection = optionalInnerCollection.get();
-                    ParameterizedType genericType = (ParameterizedType) innerCollection.getGenericType();
-                    Class innerClass = (Class) genericType.getActualTypeArguments()[0];
+                    Class innerClass = ReflectUtil.getListGenericType(innerCollection);
+                    // TODO получение generic Class из List
 
-                    List innerClassList = (List) innerCollection.get(mappingContext.instance());
+                    List children = (List) innerCollection.get(mappingContext.instance());
 
                     System.out.println("Create innerInstance - " + innerClass.getName());
                     Object innerInstance = ReflectUtil.newEmptyInstance(innerClass);
 
                     MappingContext newMappingContext = new MappingContext<>(
-                            innerClassList::add,
+                            children::add,
                             innerClass,
                             innerInstance
                     );

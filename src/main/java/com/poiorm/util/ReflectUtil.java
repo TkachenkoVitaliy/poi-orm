@@ -3,12 +3,11 @@ package com.poiorm.util;
 import com.poiorm.annotation.IdentifierMethod;
 import com.poiorm.exception.PoiOrmInstantiationException;
 import com.poiorm.exception.PoiOrmMappingException;
+import com.poiorm.exception.PoiOrmRestrictionException;
+import com.poiorm.exception.PoiOrmTypeException;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -30,6 +29,39 @@ public final class ReflectUtil {
             throw new PoiOrmInstantiationException(String.format("Cannot create a new instance of %s", type.getName()), e);
         }
         return instance;
+    }
+
+    public static Class<?> getListGenericType(Field listField) {
+        if (!List.class.isAssignableFrom(listField.getType())) {
+            throw new PoiOrmTypeException(
+                    String.format(
+                            "Field {%s} type is not List - {%s}",
+                            listField.getName(),
+                            listField.getType().getName()
+                    )
+            );
+        }
+        if (listField.getGenericType() instanceof ParameterizedType genericType) {
+            Type[] actualTypeArguments = genericType.getActualTypeArguments();
+            if (actualTypeArguments.length != 1) {
+                throw new PoiOrmRestrictionException(
+                        String.format(
+                                "Acceptable list can have one generic type, you have - %s",
+                                actualTypeArguments.length
+                        )
+                );
+            }
+            return  (Class<?>) genericType.getActualTypeArguments()[0];
+        } else {
+            throw new PoiOrmTypeException(
+                    String.format(
+                            "Field {%s} type is not ParameterizedType - {%s}",
+                            listField.getName(),
+                            listField.getType().getName()
+                    )
+            );
+        }
+
     }
 
     public static void setFieldValue(Field field, Object value, Object instance) {
