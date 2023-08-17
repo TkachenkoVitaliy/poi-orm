@@ -19,8 +19,14 @@ public final class AnnotationUtil {
     private AnnotationUtil() {
     }
 
-    public static boolean performIdentifierMethod(Class<?> type, Row row) {
+    public static boolean checkIdentity(Class<?> type, Row row) {
         final Class<? extends Annotation> IDENTIFIER_METHOD_CLASS = IdentifierMethod.class;
+
+        int identifierColumnIndex = getIdentifierFieldColumnIndex(type);
+
+        if (identifierColumnIndex < 0) {
+            return true;
+        }
 
         Cell cell = row.getCell(getIdentifierFieldColumnIndex(type));
 

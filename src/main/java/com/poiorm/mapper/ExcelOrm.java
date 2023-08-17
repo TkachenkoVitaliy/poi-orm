@@ -1,17 +1,13 @@
 package com.poiorm.mapper;
 
-import com.poiorm.annotation.ExcelCell;
-import com.poiorm.annotation.InnerRowObject;
 import com.poiorm.annotation.RowObject;
 import com.poiorm.util.AnnotationUtil;
-import com.poiorm.util.ExcelUtil;
 import com.poiorm.util.ReflectUtil;
 import com.poiorm.util.RowListIterator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -23,16 +19,16 @@ public class ExcelOrm {
         RowObject rowObjectAnnotation = rootType.getAnnotation(RowObject.class);
         int startRowIndex = rowObjectAnnotation.startRowIndex();
         int currentRowIndex = startRowIndex;
-        int cicles = 0;
+        int loops = 0;
         int treeDepth = AnnotationUtil.getTreeDepth(rootType);
 
         RowListIterator iterator = new RowListIterator(sheet, startRowIndex);
         MappingContext<T> currentMappingContext = rootMappingContext;
 
         while (iterator.hasNext()) {
-            cicles = currentRowIndex == iterator.getCurrentIndex() ? cicles + 1 : 0;
+            loops = currentRowIndex == iterator.getCurrentIndex() ? loops + 1 : 0;
 
-            if (cicles > treeDepth) break;
+            if (loops > treeDepth) break;
             if (currentMappingContext == null) break;
 
             if (currentMappingContext.consumer() == null) {
@@ -64,30 +60,8 @@ public class ExcelOrm {
             Object instance = mappingContext.instance();
             Consumer consumer = mappingContext.consumer();
 
-            // TODO возможно этот кусок кода перенести в performIdentifierMethod
-            int identifierColumnIndex = AnnotationUtil.getIdentifierFieldColumnIndex(type);
-
-            boolean check = identifierColumnIndex < 0 || AnnotationUtil.performIdentifierMethod(type, row);
-            // TODO на возможно лучше оставить т.к. тогда скроем логику работы что он вернет true если IdentifierField нету
-            // TODO возможно просто переименовать и перенести в него
-
-            if (check) {
-
-
-                for (Field field : type.getDeclaredFields()) {
-                    if (field.isAnnotationPresent(ExcelCell.class)) {
-                        ExcelCell annotation = field.getAnnotation(ExcelCell.class);
-                        ReflectUtil.setFieldValue(
-                                field,
-                                ExcelUtil.readCellValue(
-                                        field.getType(),
-                                        row.getCell(annotation.value())
-                                ),
-                                instance
-                        );
-                    }
-                }
-
+            if (AnnotationUtil.checkIdentity(type, row)) {
+                ExcelUnmarshaller.unmarshalToInstance(instance, row);
                 consumer.accept(instance);
 
                 Optional<Field> optionalInnerCollection = AnnotationUtil.getInnerCollectionField(type);
