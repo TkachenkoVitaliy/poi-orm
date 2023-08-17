@@ -69,35 +69,26 @@ public class ExcelOrm {
                 if (optionalInnerCollection.isPresent()) {
                     return mappingContext;
                 } else {
-                    return new MappingContext(
-                            consumer,
-                            type,
-                            ReflectUtil.newEmptyInstance(type)
-                    );
+                    return new MappingContext(consumer, type, ReflectUtil.newEmptyInstance(type));
                 }
             } else {
                 Optional<Field> optionalInnerCollection = AnnotationUtil.getInnerCollectionField(type);
 
                 if (optionalInnerCollection.isPresent()) {
                     Field innerCollection = optionalInnerCollection.get();
-                    Class innerClass = ReflectUtil.getListGenericType(innerCollection);
-
-                    // TODO скрыть от глаз ВАЖНО!!!
                     List children = (List) innerCollection.get(mappingContext.instance());
+                    Class innerClass = ReflectUtil.getListGenericType(innerCollection);
 
                     Object innerInstance = ReflectUtil.newEmptyInstance(innerClass);
 
-                    MappingContext newMappingContext = new MappingContext<>(
-                            children::add,
-                            innerClass,
-                            innerInstance
-                    );
-
                     iterator.previous();
-                    return recursiveFromExcel(newMappingContext, iterator);
+                    return recursiveFromExcel(
+                            new MappingContext(children::add, innerClass, innerInstance),
+                            iterator
+                    );
                 } else {
                     iterator.previous();
-                    return new MappingContext(null, null, null);
+                    return new MappingContext<>(null, null, null);
                 }
             }
         }
