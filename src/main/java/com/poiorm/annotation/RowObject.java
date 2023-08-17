@@ -14,6 +14,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({TYPE})
 @Documented
 public @interface RowObject {
+    /**
+     * Specifies parent Object class
+     * @return parent Object class
+     */
     Class parent() default void.class;
+    /**
+     * Specifies the start row index
+     * @return row index
+     */
     int startRowIndex() default 0;
 }
