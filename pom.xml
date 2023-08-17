@@ -29,8 +29,9 @@
 
     <scm>
         <connection>scm:git:git://github.com/TkachenkoVitaliy/poi-orm.git</connection>
-        <developerConnection>scm:git:ssh://github.com:TkachenkoVitaliy/poi-orm.git</developerConnection>
-        <url>http://github.com/TkachenkoVitaliy/poi-orm.git/tree/master</url>
+        <developerConnection>scm:git:https://github.com/TkachenkoVitaliy/poi-orm.git
+        </developerConnection>
+        <url>https://github.com/TkachenkoVitaliy/poi-orm</url>
     </scm>
 
     <dependencies>
@@ -134,6 +135,11 @@
                 <plugin>
                     <artifactId>maven-project-info-reports-plugin</artifactId>
                     <version>3.0.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>4.0.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
