@@ -76,6 +76,7 @@ public class ExcelOrm {
 
                 if (optionalInnerCollection.isPresent()) {
                     Field innerCollection = optionalInnerCollection.get();
+                    innerCollection.setAccessible(true);
                     List children = (List) innerCollection.get(mappingContext.instance());
                     Class innerClass = ReflectUtil.getListGenericType(innerCollection);
 
