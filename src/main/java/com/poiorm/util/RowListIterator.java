@@ -19,7 +19,7 @@ public class RowListIterator {
     }
 
     public boolean hasNext() {
-        return index + 1 <= maxIndex;
+        return index <= maxIndex;
     }
 
     public Row previous() {
@@ -28,7 +28,7 @@ public class RowListIterator {
     }
 
     public boolean hasPrevious() {
-        return index - 1 >= minIndex;
+        return index >= minIndex;
     }
 
     public int getCurrentIndex() {
