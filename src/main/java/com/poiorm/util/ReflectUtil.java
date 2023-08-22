@@ -105,7 +105,7 @@ public final class ReflectUtil {
         Object fieldValue = getFieldValue(field, instance);
         if (fieldValue instanceof List<?>) {
             Class<?> listGenericType = getListGenericType(field);
-            return (List<? extends listGenericType>) fieldValue;
+            return (List<?>) fieldValue;
         } else {
             throw new PoiOrmTypeException(
                     String.format("Field {%s} is not instance of List - instance of {%s}, from Object - %s",
