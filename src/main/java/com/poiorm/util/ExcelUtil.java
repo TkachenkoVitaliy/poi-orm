@@ -117,24 +117,6 @@ public final class ExcelUtil {
             }
         }
 
-        CellType cellType = cell.getCellType();
-        switch (cellType) {
-            case NUMERIC -> {
-                if (value == null) return cell;
-                Double doubleValue = (Double) value;
-                cell.setCellValue(doubleValue);
-            }
-            case STRING -> {
-                if (value == null) return cell;
-                String stringValue = (String) value;
-                cell.setCellValue(stringValue);
-            }
-            case _NONE, FORMULA, BOOLEAN, ERROR, BLANK -> {
-                throw new PoiOrmRestrictionException(
-                        String.format("Not supported CellType {%s}", cellType)
-                );
-            }
-        }
         return cell;
     }
 }
