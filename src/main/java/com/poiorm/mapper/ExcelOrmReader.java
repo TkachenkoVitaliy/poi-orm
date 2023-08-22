@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class ExcelOrm {
+public class ExcelOrmReader {
     public static <T> List<T> fromExcel(final Sheet sheet, Class<T> rootType) throws IllegalAccessException {
         List<T> result = new ArrayList<>();
         Consumer<T> rootConsumer = result::add;

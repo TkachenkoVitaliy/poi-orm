@@ -10,7 +10,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class ReflectUtil {
 
@@ -30,6 +32,34 @@ public final class ReflectUtil {
         }
         return instance;
     }
+
+    public static <T extends Annotation> T getAnnotation(Class<?> type, Class<T> annotation) {
+        return type.getAnnotation(annotation);
+    }
+
+    public static Optional<Field> getUniqueFieldByAnnotation(Class<?> type, Class<? extends Annotation> annotation) {
+        List<Field> fields = Arrays.stream(type.getDeclaredFields())
+                .filter(field -> field.isAnnotationPresent(annotation))
+                .toList();
+        if (fields.size() > 1) {
+            throw new PoiOrmRestrictionException(
+                    String.format(
+                            "Can't use more than one {%s} annotation - error in class {%s}",
+                            annotation.getName(),
+                            type.getName()
+                    )
+            );
+        }
+        return fields.size() > 0 ? Optional.of(fields.get(0)) : Optional.empty();
+    }
+
+    public static List<Field> getFieldsByAnnotation(Class<?> type, Class<? extends Annotation> annotation) {
+        return Arrays.stream(type.getDeclaredFields())
+                .filter(field -> field.isAnnotationPresent(annotation))
+                .collect(Collectors.toList());
+    }
+
+
 
     public static Class<?> getListGenericType(Field listField) {
         if (!List.class.isAssignableFrom(listField.getType())) {

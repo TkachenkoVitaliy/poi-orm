@@ -53,20 +53,7 @@ public final class AnnotationUtil {
 
     public static Optional<Field> getInnerCollectionField(Class<?> type) {
         final Class<? extends Annotation> INNER_ROW_OBJECT_CLASS = InnerRowObject.class;
-
-        List<Field> fields = Arrays.stream(type.getDeclaredFields())
-                .filter(field -> field.isAnnotationPresent(INNER_ROW_OBJECT_CLASS))
-                .toList();
-        if (fields.size() > 1) {
-            throw new PoiOrmRestrictionException(
-                    String.format(
-                            "Can't use more than one {%s} annotation - error in class {%s}",
-                            INNER_ROW_OBJECT_CLASS.getName(),
-                            type.getName()
-                    )
-            );
-        }
-        return fields.size() > 0 ? Optional.of(fields.get(0)) : Optional.empty();
+        return ReflectUtil.getUniqueFieldByAnnotation(type, INNER_ROW_OBJECT_CLASS);
     }
 
     public static int getTreeDepth(Class<?> rootType) {
