@@ -1,6 +1,5 @@
 package com.poiorm.util;
 
-import com.poiorm.annotation.IdentifierMethod;
 import com.poiorm.exception.PoiOrmInstantiationException;
 import com.poiorm.exception.PoiOrmMappingException;
 import com.poiorm.exception.PoiOrmRestrictionException;
@@ -11,7 +10,6 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class ReflectUtil {
@@ -100,6 +98,30 @@ public final class ReflectUtil {
             field.set(instance, value);
         } catch (IllegalAccessException e) {
             throw new PoiOrmMappingException(String.format("Unexpected cast type {%s} of field %s", value, field.getName()));
+        }
+    }
+
+    public static List<?> getFieldListValue(Field field, Object instance) {
+        Object fieldValue = getFieldValue(field, instance);
+        if (fieldValue instanceof List<?>) {
+            Class<?> listGenericType = getListGenericType(field);
+            return (List<? extends listGenericType>) fieldValue;
+        } else {
+            throw new PoiOrmTypeException(
+                    String.format("Field {%s} is not instance of List - instance of {%s}, from Object - %s",
+                            field.getName(), field.getType(), instance)
+            );
+        }
+    }
+
+    public static Object getFieldValue(Field field, Object instance) {
+        field.setAccessible(true);
+        try {
+            return field.get(instance);
+        } catch (IllegalAccessException e) {
+            throw new PoiOrmRestrictionException(
+                    String.format("Can't get field {%s} value from object {%s}", field.getName(), instance)
+            );
         }
     }
 

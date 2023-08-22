@@ -44,7 +44,7 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
           server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
-          settings-path: ${{ github.workspace }} # location for the settings.xml file
+          settings-path: ${{ github.workflows }} # location for the settings.xml file
 
 #      - name: Setup Maven settings.xml
 #        uses: whelk-io/maven-settings-xml-action@v11
