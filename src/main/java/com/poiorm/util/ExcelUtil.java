@@ -93,20 +93,19 @@ public final class ExcelUtil {
         switch (writeCellFormat) {
             case PERCENTAGE -> {
                 if (value == null) return cell;
-                Double doubleValue = (Double) value;
-                Double percentage = doubleValue / 100;
-                cell.setCellValue(percentage);
+                double doubleValue = (double) value / 100;
+                cell.setCellValue(doubleValue);
                 cell.setCellStyle(formatter.getPercentageCellStyle());
             }
             case FLOAT_NUMBER -> {
                 if (value == null) return cell;
-                Double doubleValue = (Double) value;
+                double doubleValue = (double) value;
                 cell.setCellValue(doubleValue);
                 cell.setCellStyle(formatter.getDefaultCellStyle());
             }
             case NUMBER -> {
                 if (value == null) return cell;
-                Double doubleValue = (Double) value;
+                double doubleValue = (double) value;
                 cell.setCellValue(doubleValue);
                 cell.setCellStyle(formatter.getNumberCellStyle());
             }
