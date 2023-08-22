@@ -4,11 +4,10 @@ import com.poiorm.annotation.WritableCells;
 import com.poiorm.annotation.WritableHeader;
 import com.poiorm.annotation.WritableObject;
 import com.poiorm.exception.PoiOrmMappingException;
+import com.poiorm.type.WriteCellFormat;
 import com.poiorm.util.ExcelUtil;
 import com.poiorm.util.ReflectUtil;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.*;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -35,6 +34,9 @@ public class ExcelOrmWriter {
         if (data == null || data.size() == 0) {
             throw new PoiOrmMappingException("Cant write empty list");
         }
+
+        DataFormatter formatter = new DataFormatter(sheet.getWorkbook());
+
         T firstDataInstance = data.get(0);
         Class<T> dataType = (Class<T>) firstDataInstance.getClass();
 
@@ -42,26 +44,28 @@ public class ExcelOrmWriter {
 
         WritableObject writableObjectAnnotation = ReflectUtil.getAnnotation(dataType, WRITABLE_OBJECT_CLASS);
         switch (writableObjectAnnotation.direction()) {
-            case ROW -> lastCell = writeRows(sheet, data, skipTopRows, skipLeftColumns);
-            case COLUMN -> lastCell = writeColumns(sheet, data, skipTopRows, skipLeftColumns);
+            case ROW -> lastCell = writeRows(sheet, data, skipTopRows, skipLeftColumns, formatter);
+            case COLUMN -> lastCell = writeColumns(sheet, data, skipTopRows, skipLeftColumns, formatter);
         }
 
         return lastCell;
     }
 
-    private static <T> Cell writeColumns(Sheet sheet, List<T> data, final int startRowIndex, final int startColumnIndex) {
+    private static <T> Cell writeColumns(Sheet sheet, List<T> data, final int startRowIndex, final int startColumnIndex,
+                                         DataFormatter formatter) {
         Cell lastCell = null;
         int columnIndex = startColumnIndex;
 
         for (T item: data) {
-            lastCell = writeColumn(sheet, item, startRowIndex, columnIndex);
+            lastCell = writeColumn(sheet, item, startRowIndex, columnIndex, formatter);
             columnIndex++;
         }
 
         return lastCell;
     }
 
-    private static <T> Cell writeColumn(Sheet sheet, T data, final int startRowIndex, final int columnIndex) {
+    private static <T> Cell writeColumn(Sheet sheet, T data, final int startRowIndex, final int columnIndex,
+                                        DataFormatter formatter) {
         int currentRowIndex = startRowIndex;
         Cell currentCell = null;
 
@@ -72,10 +76,10 @@ public class ExcelOrmWriter {
         if (headerFieldOptional.isPresent()) {
             Field headerField = headerFieldOptional.get();
             WritableHeader headerAnnotation = headerField.getAnnotation(WRITABLE_HEADER_CLASS);
-            CellType cellType = headerAnnotation.cellType();
+            WriteCellFormat writeCellFormat = headerAnnotation.cellFormat();
             Object value = ReflectUtil.getFieldValue(headerField, data);
-            currentCell = ExcelUtil.getOrCreateCell(sheet, currentRowIndex, columnIndex, cellType);
-            ExcelUtil.writeCellValue(value, currentCell);
+            currentCell = ExcelUtil.getOrCreateCell(sheet, currentRowIndex, columnIndex, writeCellFormat);
+            ExcelUtil.writeCellValue(value, currentCell, writeCellFormat, formatter);
             currentRowIndex++;
         }
         // DATA CELLS
@@ -83,11 +87,11 @@ public class ExcelOrmWriter {
         if (dataFieldOptional.isPresent()) {
             Field dataField = dataFieldOptional.get();
             WritableCells cellsAnnotation = dataField.getAnnotation(WRITABLE_CELLS_CLASS);
-            CellType cellType = cellsAnnotation.cellType();
+            WriteCellFormat writeCellFormat = cellsAnnotation.cellFormat();
             List<?> value = ReflectUtil.getFieldListValue(dataField, data);
             for(Object cellValue : value) {
-                currentCell = ExcelUtil.getOrCreateCell(sheet, currentRowIndex, columnIndex, cellType);
-                ExcelUtil.writeCellValue(cellValue, currentCell);
+                currentCell = ExcelUtil.getOrCreateCell(sheet, currentRowIndex, columnIndex, writeCellFormat);
+                ExcelUtil.writeCellValue(cellValue, currentCell, writeCellFormat, formatter);
                 currentRowIndex++;
             }
         }
@@ -95,19 +99,21 @@ public class ExcelOrmWriter {
         return currentCell;
     }
 
-    private static <T> Cell writeRows(Sheet sheet, List<T> data, int startRowIndex, final int startColumnIndex) {
+    private static <T> Cell writeRows(Sheet sheet, List<T> data, int startRowIndex, final int startColumnIndex,
+                                      DataFormatter formatter) {
         Cell lastCell = null;
         int rowIndex = startRowIndex;
 
         for (T item: data) {
-            lastCell = writeColumn(sheet, item, rowIndex, startColumnIndex);
+            lastCell = writeColumn(sheet, item, rowIndex, startColumnIndex, formatter);
             rowIndex++;
         }
 
         return lastCell;
     }
 
-    private static <T> Cell writeRow(Sheet sheet, List<T> data, final int startRowIndex, int startColumnIndex) {
+    private static <T> Cell writeRow(Sheet sheet, List<T> data, final int startRowIndex, int startColumnIndex,
+                                     DataFormatter formatter) {
         int currentColumnIndex = startColumnIndex;
         Cell currentCell = null;
 
@@ -118,10 +124,10 @@ public class ExcelOrmWriter {
         if (headerFieldOptional.isPresent()) {
             Field headerField = headerFieldOptional.get();
             WritableHeader headerAnnotation = headerField.getAnnotation(WRITABLE_HEADER_CLASS);
-            CellType cellType = headerAnnotation.cellType();
+            WriteCellFormat writeCellFormat = headerAnnotation.cellFormat();
             Object value = ReflectUtil.getFieldValue(headerField, data);
-            currentCell = ExcelUtil.getOrCreateCell(sheet, startRowIndex, currentColumnIndex, cellType);
-            ExcelUtil.writeCellValue(value, currentCell);
+            currentCell = ExcelUtil.getOrCreateCell(sheet, startRowIndex, currentColumnIndex, writeCellFormat);
+            ExcelUtil.writeCellValue(value, currentCell, writeCellFormat, formatter);
             currentColumnIndex++;
         }
         // DATA CELLS
@@ -129,11 +135,11 @@ public class ExcelOrmWriter {
         if (dataFieldOptional.isPresent()) {
             Field dataField = dataFieldOptional.get();
             WritableCells cellsAnnotation = dataField.getAnnotation(WRITABLE_CELLS_CLASS);
-            CellType cellType = cellsAnnotation.cellType();
+            WriteCellFormat writeCellFormat = cellsAnnotation.cellFormat();
             List<?> value = ReflectUtil.getFieldListValue(dataField, data);
             for(Object cellValue : value) {
-                currentCell = ExcelUtil.getOrCreateCell(sheet, startRowIndex, currentColumnIndex, cellType);
-                ExcelUtil.writeCellValue(cellValue, currentCell);
+                currentCell = ExcelUtil.getOrCreateCell(sheet, startRowIndex, currentColumnIndex, writeCellFormat);
+                ExcelUtil.writeCellValue(cellValue, currentCell, writeCellFormat, formatter);
                 currentColumnIndex++;
             }
         }

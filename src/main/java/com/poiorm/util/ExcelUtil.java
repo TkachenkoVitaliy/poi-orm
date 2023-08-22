@@ -2,6 +2,8 @@ package com.poiorm.util;
 
 import com.poiorm.exception.PoiOrmMappingException;
 import com.poiorm.exception.PoiOrmRestrictionException;
+import com.poiorm.mapper.DataFormatter;
+import com.poiorm.type.WriteCellFormat;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -25,7 +27,14 @@ public final class ExcelUtil {
         return cell;
     }
 
-    public static Cell getOrCreateCell(Row row, int columnIndex, CellType cellType) {
+    public static Cell getOrCreateCell(Row row, int columnIndex, WriteCellFormat writeCellFormat) {
+        CellType cellType = null;
+
+        switch (writeCellFormat) {
+            case PERCENTAGE, FLOAT_NUMBER, NUMBER -> cellType = CellType.NUMERIC;
+            case STRING -> cellType = CellType.STRING;
+        }
+
         Cell cell = row.getCell(columnIndex);
         if (cell == null) {
             cell = row.createCell(columnIndex, cellType);
@@ -38,9 +47,9 @@ public final class ExcelUtil {
         return getOrCreateCell(row, columnIndex);
     }
 
-    public static Cell getOrCreateCell(Sheet sheet, int rowIndex, int columnIndex, CellType cellType) {
+    public static Cell getOrCreateCell(Sheet sheet, int rowIndex, int columnIndex, WriteCellFormat writeCellFormat) {
         Row row = getOrCreateRow(sheet, rowIndex);
-        return getOrCreateCell(row, columnIndex, cellType);
+        return getOrCreateCell(row, columnIndex, writeCellFormat);
     }
 
     public static Object readCellValue(Class<?> fieldType, Cell cell) {
@@ -80,7 +89,35 @@ public final class ExcelUtil {
         }
     }
 
-    public static Cell writeCellValue(Object value, Cell cell) {
+    public static Cell writeCellValue(Object value, Cell cell, WriteCellFormat writeCellFormat, DataFormatter formatter) {
+        switch (writeCellFormat) {
+            case PERCENTAGE -> {
+                if (value == null) return cell;
+                Double doubleValue = (Double) value;
+                Double percentage = doubleValue / 100;
+                cell.setCellValue(percentage);
+                cell.setCellStyle(formatter.getPercentageCellStyle());
+            }
+            case FLOAT_NUMBER -> {
+                if (value == null) return cell;
+                Double doubleValue = (Double) value;
+                cell.setCellValue(doubleValue);
+                cell.setCellStyle(formatter.getDefaultCellStyle());
+            }
+            case NUMBER -> {
+                if (value == null) return cell;
+                Double doubleValue = (Double) value;
+                cell.setCellValue(doubleValue);
+                cell.setCellStyle(formatter.getNumberCellStyle());
+            }
+            case STRING -> {
+                if (value == null) return cell;
+                String stringValue = (String) value;
+                cell.setCellValue(stringValue);
+                cell.setCellStyle(formatter.getDefaultCellStyle());
+            }
+        }
+
         CellType cellType = cell.getCellType();
         switch (cellType) {
             case NUMERIC -> {

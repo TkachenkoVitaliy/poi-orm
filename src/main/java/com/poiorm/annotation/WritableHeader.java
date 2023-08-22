@@ -1,5 +1,6 @@
 package com.poiorm.annotation;
 
+import com.poiorm.type.WriteCellFormat;
 import org.apache.poi.ss.usermodel.CellType;
 
 import java.lang.annotation.Retention;
@@ -11,5 +12,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Target({FIELD})
 public @interface WritableHeader {
-    CellType cellType();
+    WriteCellFormat cellFormat();
 }
